@@ -1,0 +1,18 @@
+name: myko
+version: 0.1.0
+description: "MYKO — Sovereign Life OS: encrypted vault, Nostr identity, Lightning payments"
+transport: stdio
+command: "python"
+args: ["-m", "backend.main"]
+working_directory: "/absolute/path/to/myko"
+env:
+  MYKO_PASSPHRASE: "${MYKO_PASSPHRASE}"
+  IPFS_API_URL: "http://127.0.0.1:5001/api/v0"
+  MYKO_HOME: "${HOME}/MYKO"
+  LIGHTNING_BACKEND: "lnbits"
+  LIGHTNING_URL: "https://127.0.0.1:8080"
+  LIGHTNING_API_KEY: "${LIGHTNING_API_KEY}"
+  MAX_SATS_PER_TASK: "1000"
+  MAX_DAILY_SATS: "10000"
+  YUBIKEY_ENABLED: "false"
+system_prompt_file: "goose/sovereign_manifesto.md"

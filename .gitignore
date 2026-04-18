@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+*.egg-info/
+
+# Logs / runtime
+logs/
+*.log
+
+# Node
+node_modules/
+dist/
+
+# Tauri
+frontend/src-tauri/target/
+frontend/src-tauri/gen/
+
+# OS
+.DS_Store
+._*
