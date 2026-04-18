@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="fc" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#BEFAFF"/>
+      <stop offset="50%" stop-color="#00F0FF"/>
+      <stop offset="100%" stop-color="#005C66"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" fill="#07090C"/>
+  <g transform="translate(32 32)" stroke="#00F0FF" fill="#00F0FF" stroke-linecap="round">
+    <polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" stroke-width="1.6" fill="none" opacity="0.7"/>
+    <g stroke-width="1.4" opacity="0.95">
+      <line x1="0" y1="0" x2="0"   y2="-26"/>
+      <line x1="0" y1="0" x2="22"  y2="-13"/>
+      <line x1="0" y1="0" x2="22"  y2="13"/>
+      <line x1="0" y1="0" x2="0"   y2="26"/>
+      <line x1="0" y1="0" x2="-22" y2="13"/>
+      <line x1="0" y1="0" x2="-22" y2="-13"/>
+    </g>
+    <g>
+      <circle cx="0"   cy="-26" r="2"/>
+      <circle cx="22"  cy="-13" r="2"/>
+      <circle cx="22"  cy="13"  r="2"/>
+      <circle cx="0"   cy="26"  r="2"/>
+      <circle cx="-22" cy="13"  r="2"/>
+      <circle cx="-22" cy="-13" r="2"/>
+    </g>
+    <circle r="9" fill="url(#fc)" stroke="none"/>
+    <circle r="3" fill="#FFFFFF" stroke="none"/>
+  </g>
+</svg>

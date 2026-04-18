@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MYKO — Sovereign Life OS</title>
+  <meta name="description" content="Local-first, decentralized Life OS. Encrypted IPFS vault, Nostr identity, Bitcoin Lightning. AI executes, never controls. The user owns every key." />
+  <meta name="theme-color" content="#07090C" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="mask-icon" href="/favicon.svg" color="#00F0FF" />
+
+  <!-- OpenGraph / Twitter -->
+  <meta property="og:title" content="MYKO — Sovereign Life OS" />
+  <meta property="og:description" content="Local-first. Decentralized. AI executes, never controls. The user owns every key." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/logo-wordmark.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MYKO — Sovereign Life OS" />
+  <meta name="twitter:description" content="Local-first. Decentralized. The user owns every key." />
+  <meta name="twitter:image" content="/logo-wordmark.svg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="bg-field" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="nav-brand" href="#top">
+      <img src="/logo.svg" alt="" width="32" height="32" />
+      <span class="nav-word">MYKO</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#about">About</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a class="nav-cta" href="https://github.com/SativusCrocus/MYKO" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- ===================== HERO ===================== -->
+    <section class="hero">
+      <div class="hero-lockup">
+        <div class="hero-mark">
+          <img src="/logo.svg" alt="" width="180" height="180" />
+        </div>
+        <h1 class="hero-title">MYKO</h1>
+        <p class="hero-sub">
+          <span>SOVEREIGN</span><span class="dot">·</span><span>LIFE</span><span class="dot">·</span><span>OS</span>
+        </p>
+        <p class="hero-lede">
+          A local-first, decentralized Life OS where <strong>Goose is the brain</strong>,
+          the user owns every key, and <strong>AI executes — never controls</strong>.
+        </p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="https://github.com/SativusCrocus/MYKO" target="_blank" rel="noopener">
+            View on GitHub
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#install">Install locally</a>
+        </div>
+
+        <ul class="hero-badges">
+          <li><span class="dot-live"></span> 69 tests passing</li>
+          <li>Python 3.13 · React 19 · Tauri 2</li>
+          <li>Keys never leave your machine</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===================== ABOUT ===================== -->
+    <section class="section" id="about">
+      <div class="section-head">
+        <span class="kicker">About</span>
+        <h2>What MYKO is — and isn't.</h2>
+      </div>
+      <div class="about-grid">
+        <article class="about-card">
+          <h3>What it is</h3>
+          <p>
+            MYKO is a sovereign operating layer for your digital life: an encrypted vault,
+            a decentralized identity, and a programmable value rail, all wired together into
+            a single desktop app that an LLM (Goose) can drive on your behalf via MCP tools.
+          </p>
+          <p>
+            Every sensitive byte is encrypted with a key derived from your passphrase
+            (optionally bound to a hardware YubiKey). The bridge binds only to
+            <code>127.0.0.1</code>. Nothing phones home.
+          </p>
+        </article>
+        <article class="about-card">
+          <h3>What it isn't</h3>
+          <p>
+            It isn't a cloud service, a hosted wallet, or a chat wrapper. There is no MYKO
+            server, no MYKO account, no MYKO in the middle. The AI has <em>tools</em>, not
+            authority — it can request an action, but the spend caps, the passphrase, and
+            the hardware key live with you.
+          </p>
+          <p>
+            It isn't opinionated about your model either. Any LLM that speaks MCP stdio can
+            drive it.
+          </p>
+        </article>
+      </div>
+
+      <blockquote class="manifesto">
+        <p>
+          The user owns every key. The AI executes, never controls. The vault is encrypted
+          at rest and in transit. Keys never touch the network in plaintext. Spend is capped,
+          audited, and reversible in intent. Sovereignty is the default.
+        </p>
+        <cite>— MYKO Sovereign Manifesto</cite>
+      </blockquote>
+    </section>
+
+    <!-- ===================== ARCHITECTURE ===================== -->
+    <section class="section" id="architecture">
+      <div class="section-head">
+        <span class="kicker">Architecture</span>
+        <h2>Four sovereign layers. Two local processes. Zero servers.</h2>
+      </div>
+      <div class="layers">
+        <div class="layer">
+          <div class="layer-num">01</div>
+          <h3>Brain + Memory</h3>
+          <p>
+            MCP server (<code>stdio JSON-RPC 2.0</code>) + encrypted manifest vault
+            (<code>PBKDF2-600k → AES-256-GCM</code>) backed by a local Kubo/IPFS node.
+            Cross-process safe via <code>fcntl.flock</code>.
+          </p>
+          <ul>
+            <li><code>vault_store</code> · <code>vault_retrieve</code></li>
+            <li><code>vault_list</code> · <code>ipfs_pin_directory</code></li>
+          </ul>
+        </div>
+
+        <div class="layer">
+          <div class="layer-num">02</div>
+          <h3>Identity</h3>
+          <p>
+            Nostr with full <em>BIP-340 Schnorr</em>, <em>NIP-01</em> canonical serialization,
+            <em>NIP-13 PoW</em>, <em>NIP-44 v2</em> encryption, and <em>NIP-17</em> gift-wrapped DMs.
+            Keypair auto-generated, stored encrypted in the vault.
+          </p>
+          <ul>
+            <li><code>nostr_broadcast</code></li>
+            <li><code>nostr_encrypt_dm</code></li>
+          </ul>
+        </div>
+
+        <div class="layer">
+          <div class="layer-num">03</div>
+          <h3>Value</h3>
+          <p>
+            Bitcoin Lightning via LND (macaroon + TLS) or LNbits (API key).
+            Per-task and rolling 24h spend caps enforced on every call. Preimages
+            intentionally discarded — only <code>payment_hash</code> surfaces.
+          </p>
+          <ul>
+            <li><code>lightning_balance</code> · <code>lightning_create_invoice</code></li>
+            <li><code>lightning_pay</code></li>
+          </ul>
+        </div>
+
+        <div class="layer">
+          <div class="layer-num">04</div>
+          <h3>Interface</h3>
+          <p>
+            Tauri desktop shell with a React 19 + Three.js dashboard. FastAPI bridge on
+            <code>127.0.0.1:9473</code>, 64-hex Bearer token at <code>~/MYKO/.session_token</code>
+            (0600), CORS locked to <code>tauri://localhost</code>.
+          </p>
+          <ul>
+            <li>Animated <code>StateOrb</code> · <code>VaultExplorer</code> 3D graph</li>
+            <li>Live audit feed · Goose heartbeat</li>
+          </ul>
+        </div>
+      </div>
+
+      <pre class="arch-diagram" aria-label="Architecture diagram"><code>┌─────────────────────────────────────────────────┐
+│                   User's Machine                │
+│                                                 │
+│  ┌──────────┐    stdio     ┌──────────────────┐ │
+│  │  Goose   │◄────────────►│  MCP Server      │ │
+│  │  (LLM)   │              │  backend.main    │ │
+│  └──────────┘              └────────┬─────────┘ │
+│                                     │ imports   │
+│  ┌──────────┐    HTTP      ┌────────┴─────────┐ │
+│  │  Tauri   │◄────────────►│  Bridge Server   │ │
+│  │  (UI)    │  :9473       │  backend.bridge  │ │
+│  └──────────┘              └────────┬─────────┘ │
+│                                     │ imports   │
+│                         ┌───────────┴──────────┐│
+│                         │   Shared Backend     ││
+│                         │ crypto · storage ·   ││
+│                         │ vault · nostr ·      ││
+│                         │ lightning            ││
+│                         └───────────┬──────────┘│
+│                                     │           │
+│                  ┌──────────────────┼────────┐  │
+│                  ▼                  ▼        ▼  │
+│              ~/MYKO/           Kubo IPFS   LND/ │
+│              manifest.enc      :5001       LNbits│
+│              logs/                              │
+└─────────────────────────────────────────────────┘</code></pre>
+    </section>
+
+    <!-- ===================== FEATURES ===================== -->
+    <section class="section" id="features">
+      <div class="section-head">
+        <span class="kicker">Capabilities</span>
+        <h2>Nine tools. One sovereign surface.</h2>
+      </div>
+      <div class="tools">
+        <div class="tool"><code>vault_store</code><span>Encrypt &amp; pin a file to the IPFS-backed vault.</span></div>
+        <div class="tool"><code>vault_retrieve</code><span>Fetch &amp; decrypt a file by CID.</span></div>
+        <div class="tool"><code>vault_list</code><span>Enumerate vault entries.</span></div>
+        <div class="tool"><code>ipfs_pin_directory</code><span>Hash &amp; pin an entire local directory.</span></div>
+        <div class="tool"><code>nostr_broadcast</code><span>Sign &amp; broadcast an event (NIP-13 PoW optional).</span></div>
+        <div class="tool"><code>nostr_encrypt_dm</code><span>NIP-17 gift-wrapped, NIP-44 encrypted DMs.</span></div>
+        <div class="tool"><code>lightning_balance</code><span>Current balance in sats.</span></div>
+        <div class="tool"><code>lightning_create_invoice</code><span>Create a BOLT11 invoice.</span></div>
+        <div class="tool"><code>lightning_pay</code><span>Pay BOLT11 — gated by per-task &amp; daily caps.</span></div>
+      </div>
+    </section>
+
+    <!-- ===================== SECURITY ===================== -->
+    <section class="section" id="security">
+      <div class="section-head">
+        <span class="kicker">Security</span>
+        <h2>Defense in depth, by default.</h2>
+      </div>
+      <div class="sec-grid">
+        <div class="sec">
+          <h4>PBKDF2-SHA256 · 600k iterations</h4>
+          <p>Unique salt per encryption. AES-256-GCM authenticates every byte.</p>
+        </div>
+        <div class="sec">
+          <h4>Optional hardware binding</h4>
+          <p>YubiKey challenge-response mixed into the master key via HMAC-SHA256. No YubiKey → no decrypt.</p>
+        </div>
+        <div class="sec">
+          <h4>Memory hygiene</h4>
+          <p><code>secure_wipe</code> in <code>finally</code> blocks zeroes sensitive buffers as soon as they're spent.</p>
+        </div>
+        <div class="sec">
+          <h4>Constant-time compares</h4>
+          <p>Session-token &amp; HMAC validation use <code>hmac.compare_digest</code> to neutralize timing side-channels.</p>
+        </div>
+        <div class="sec">
+          <h4>Localhost only</h4>
+          <p>Bridge binds to <code>127.0.0.1</code>. CORS locked to <code>tauri://localhost</code>. Tauri CSP rejects external URLs.</p>
+        </div>
+        <div class="sec">
+          <h4>No secrets in logs</h4>
+          <p>Audit log stores SHA-256 hashes of tool inputs/outputs — never preimages, macaroons, or plaintext.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== INSTALL ===================== -->
+    <section class="section" id="install">
+      <div class="section-head">
+        <span class="kicker">Install</span>
+        <h2>Run it locally in four steps.</h2>
+      </div>
+      <ol class="steps">
+        <li>
+          <h4>1 &nbsp;Clone &amp; create a venv</h4>
+          <pre><code>git clone https://github.com/SativusCrocus/MYKO.git
+cd MYKO
+python3.13 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r requirements.txt</code></pre>
+        </li>
+        <li>
+          <h4>2 &nbsp;Configure secrets</h4>
+          <pre><code>cp .env.example .env
+# fill in MYKO_PASSPHRASE, LIGHTNING_*, etc.
+chmod 600 .env</code></pre>
+        </li>
+        <li>
+          <h4>3 &nbsp;Verify</h4>
+          <pre><code>pytest tests/ -v            # 69 passing</code></pre>
+        </li>
+        <li>
+          <h4>4 &nbsp;Run</h4>
+          <pre><code>python -m backend.bridge &amp;
+cd frontend &amp;&amp; npm install &amp;&amp; npm run tauri dev</code></pre>
+        </li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="/logo.svg" alt="" width="24" height="24" />
+        <span>MYKO</span>
+        <span class="footer-tagline">Sovereign · Life · OS</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/SativusCrocus/MYKO" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/SativusCrocus/MYKO#readme" target="_blank" rel="noopener">Docs</a>
+        <a href="https://github.com/SativusCrocus/MYKO/issues" target="_blank" rel="noopener">Issues</a>
+      </div>
+    </div>
+    <p class="footer-fine">Runs entirely on your machine. Keys never leave your machine.</p>
+  </footer>
+</body>
+</html>

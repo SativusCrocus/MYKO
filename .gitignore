@@ -21,3 +21,7 @@ frontend/src-tauri/gen/
 # OS
 .DS_Store
 ._*
+
+# Local agent / deploy state
+.claude/
+.vercel
