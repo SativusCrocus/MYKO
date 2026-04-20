@@ -9,11 +9,11 @@
   </p>
 
   <p>
-    <a href="#install"><img alt="Python" src="https://img.shields.io/badge/Python-3.13-00F0FF?style=for-the-badge&labelColor=07090C&logo=python&logoColor=00F0FF"/></a>
+    <a href="#install"><img alt="Python" src="https://img.shields.io/badge/Python-3.12%2B-00F0FF?style=for-the-badge&labelColor=07090C&logo=python&logoColor=00F0FF"/></a>
     <a href="#install"><img alt="React" src="https://img.shields.io/badge/React-19-00F0FF?style=for-the-badge&labelColor=07090C&logo=react&logoColor=00F0FF"/></a>
     <a href="#install"><img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-00F0FF?style=for-the-badge&labelColor=07090C&logo=tauri&logoColor=00F0FF"/></a>
-    <img alt="Tests" src="https://img.shields.io/badge/tests-69%20passing-00F0FF?style=for-the-badge&labelColor=07090C"/>
-    <img alt="License" src="https://img.shields.io/badge/license-see%20repo-7EE8F2?style=for-the-badge&labelColor=07090C"/>
+    <img alt="Tests" src="https://img.shields.io/badge/tests-173%20passing-00F0FF?style=for-the-badge&labelColor=07090C"/>
+    <img alt="License" src="https://img.shields.io/badge/license-MIT-7EE8F2?style=for-the-badge&labelColor=07090C"/>
   </p>
 
   <p>
@@ -101,7 +101,7 @@ Four sovereign layers, two local processes, zero servers.
 ```bash
 git clone https://github.com/SativusCrocus/MYKO.git
 cd MYKO
-python3.13 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
@@ -148,7 +148,7 @@ cd frontend && npm run tauri dev
 ## Verify
 
 ```bash
-pytest tests/ -v          # 69 tests should pass
+pytest tests/ -v          # 173 tests should pass
 cd frontend && npx tsc --noEmit   # frontend typecheck
 ```
 
@@ -213,7 +213,7 @@ myko/
 │   └── src-tauri/           Rust Tauri shell
 ├── goose/                   Goose profile + sovereign manifesto
 ├── landing/                 Static marketing page (Vercel)
-├── tests/                   pytest suite (69 tests)
+├── tests/                   pytest suite (173 tests)
 ├── requirements.txt
 ├── vercel.json              Vercel deploy config for landing/
 └── README.md                you are here
