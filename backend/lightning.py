@@ -8,7 +8,14 @@ Common interface:
 Spend protection:
   * Per-task limit: ``MAX_SATS_PER_TASK`` (default 1000 sats).
   * Rolling-24h limit: ``MAX_DAILY_SATS`` (default 10000 sats).
-  * In-memory spend ledger is pruned on each ``pay_invoice`` call.
+  * Ledger is persisted to ``~/MYKO/.spend_ledger.json`` (mode 0600) on every
+    successful payment and pruned (>24h) on load so a process restart cannot
+    bypass the rolling cap.
+
+Lifecycle: use as an async context manager to own the ``aiohttp.ClientSession``:
+
+    async with LightningWallet.create(config) as wallet:
+        await wallet.get_balance()
 
 Never log or return preimages; only ``payment_hash``.
 """
@@ -17,7 +24,9 @@ from __future__ import annotations
 
 import abc
 import base64
+import json
 import logging
+import os
 import ssl
 import time
 from pathlib import Path
@@ -29,6 +38,9 @@ from pydantic import BaseModel, ConfigDict
 from .config import Settings
 
 log = logging.getLogger("myko.lightning")
+
+DEFAULT_TIMEOUT_SECONDS = 30
+LEDGER_FILENAME = ".spend_ledger.json"
 
 
 class LightningError(Exception):
@@ -62,7 +74,30 @@ class LightningWallet(abc.ABC):
 
     def __init__(self, config: Settings):
         self._config = config
-        self._spend_ledger: list[tuple[float, int]] = []
+        self._ledger_path: Path = config.MYKO_HOME / LEDGER_FILENAME
+        self._spend_ledger: list[tuple[float, int]] = self._load_ledger()
+        self._session: aiohttp.ClientSession | None = None
+
+    # ---------- session lifecycle --------------------------------------
+
+    async def __aenter__(self) -> "LightningWallet":
+        timeout = aiohttp.ClientTimeout(total=DEFAULT_TIMEOUT_SECONDS)
+        self._session = aiohttp.ClientSession(timeout=timeout)
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.close()
+
+    async def close(self) -> None:
+        if self._session is not None:
+            await self._session.close()
+            self._session = None
+
+    @property
+    def session(self) -> aiohttp.ClientSession:
+        if self._session is None:
+            raise LightningError("LightningWallet not initialized (use `async with`)")
+        return self._session
 
     # ---------- abstract -----------------------------------------------
 
@@ -77,6 +112,45 @@ class LightningWallet(abc.ABC):
         """Backend-specific payment. Returns (success, payment_hash, error_msg)."""
 
     # ------------------------------------------------------------ spend
+
+    def _load_ledger(self) -> list[tuple[float, int]]:
+        path = self._ledger_path
+        if not path.exists():
+            return []
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as e:
+            log.warning(f"Spend ledger at {path} unreadable ({e}); starting empty")
+            return []
+        if not isinstance(raw, list):
+            log.warning(f"Spend ledger at {path} not a list; starting empty")
+            return []
+        now = time.time()
+        cutoff = now - 86_400
+        out: list[tuple[float, int]] = []
+        for row in raw:
+            if (
+                isinstance(row, list)
+                and len(row) == 2
+                and isinstance(row[0], (int, float))
+                and isinstance(row[1], int)
+                and row[0] >= cutoff
+            ):
+                out.append((float(row[0]), int(row[1])))
+        return out
+
+    def _save_ledger(self) -> None:
+        path = self._ledger_path
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_suffix(path.suffix + ".tmp")
+            # Write with 0600 mode and then atomically rename.
+            fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump([[ts, amt] for ts, amt in self._spend_ledger], f)
+            os.replace(tmp, path)
+        except OSError as e:
+            log.error(f"Failed to persist spend ledger to {path}: {e}")
 
     def _prune_ledger(self, now: float) -> None:
         cutoff = now - 86_400
@@ -114,6 +188,7 @@ class LightningWallet(abc.ABC):
         success, payment_hash, err = await self._pay_invoice_raw(bolt11_str)
         if success:
             self._spend_ledger.append((now, amount_sats))
+            self._save_ledger()
             log.info(
                 f"Lightning payment ok: hash={payment_hash} amount_sats={amount_sats}",
                 extra={
@@ -169,15 +244,13 @@ class LNDWallet(LightningWallet):
 
     async def _request(self, method: str, path: str, *, json_body=None) -> dict:
         url = f"{self._url}{path}"
-        timeout = aiohttp.ClientTimeout(total=30)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.request(
-                method, url, headers=self._headers(), json=json_body, ssl=self._ssl
-            ) as resp:
-                body = await resp.json(content_type=None)
-                if resp.status != 200:
-                    raise LightningError(f"LND {method} {path} returned {resp.status}: {body}")
-                return body
+        async with self.session.request(
+            method, url, headers=self._headers(), json=json_body, ssl=self._ssl
+        ) as resp:
+            body = await resp.json(content_type=None)
+            if resp.status != 200:
+                raise LightningError(f"LND {method} {path} returned {resp.status}: {body}")
+            return body
 
     async def get_balance(self) -> int:
         data = await self._request("GET", "/v1/balance/channels")
@@ -238,13 +311,11 @@ class LNbitsWallet(LightningWallet):
 
     async def _request(self, method: str, path: str, *, json_body=None) -> dict:
         url = f"{self._url}{path}"
-        timeout = aiohttp.ClientTimeout(total=30)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.request(method, url, headers=self._headers(), json=json_body) as resp:
-                body = await resp.json(content_type=None)
-                if resp.status >= 400:
-                    raise LightningError(f"LNbits {method} {path} returned {resp.status}: {body}")
-                return body
+        async with self.session.request(method, url, headers=self._headers(), json=json_body) as resp:
+            body = await resp.json(content_type=None)
+            if resp.status >= 400:
+                raise LightningError(f"LNbits {method} {path} returned {resp.status}: {body}")
+            return body
 
     async def get_balance(self) -> int:
         data = await self._request("GET", "/api/v1/wallet")

@@ -152,6 +152,14 @@ pytest tests/ -v          # 69 tests should pass
 cd frontend && npx tsc --noEmit   # frontend typecheck
 ```
 
+End-to-end acceptance test against a running Kubo daemon:
+
+```bash
+MYKO_PASSPHRASE=test-e2e-pw python scripts/e2e_vault.py
+```
+
+Stores a random payload through the encrypted vault, lists the manifest, retrieves the CID, decrypts, and byte-compares against the original. Exits 0 on success. Pass `--file <path>` to store a specific file.
+
 Ask Goose:
 
 > *Store a file called `hello.txt` with the content "hi" in the vault.*
@@ -221,7 +229,7 @@ A static marketing page lives in [`landing/`](landing/) and deploys to Vercel vi
 
 ## License
 
-See project root for license.
+MIT — see [LICENSE](LICENSE).
 
 ---
 

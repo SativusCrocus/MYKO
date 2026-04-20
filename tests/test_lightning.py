@@ -19,7 +19,7 @@ from backend.lightning import (
 )
 
 
-def _settings(**overrides) -> Settings:
+def _settings(tmp_path: Path | None = None, **overrides) -> Settings:
     base = {
         "MYKO_PASSPHRASE": "test-passphrase-1234",
         "LIGHTNING_BACKEND": "lnbits",
@@ -28,6 +28,8 @@ def _settings(**overrides) -> Settings:
         "MAX_SATS_PER_TASK": 1000,
         "MAX_DAILY_SATS": 5000,
     }
+    if tmp_path is not None:
+        base["MYKO_HOME"] = tmp_path
     base.update(overrides)
     return Settings(**base)
 
@@ -77,8 +79,8 @@ def test_decode_amount_rejects_amountless_invoice():
 
 
 @pytest.mark.asyncio
-async def test_rejects_over_per_task_cap():
-    wallet = LNbitsWallet(_settings(MAX_SATS_PER_TASK=500))
+async def test_rejects_over_per_task_cap(tmp_path):
+    wallet = LNbitsWallet(_settings(tmp_path, MAX_SATS_PER_TASK=500))
 
     async def _ignore_raw(_):
         raise AssertionError("pay_invoice_raw must not be called when the cap rejects")
@@ -92,8 +94,8 @@ async def test_rejects_over_per_task_cap():
 
 
 @pytest.mark.asyncio
-async def test_rejects_over_daily_cap():
-    wallet = LNbitsWallet(_settings(MAX_SATS_PER_TASK=1000, MAX_DAILY_SATS=1500))
+async def test_rejects_over_daily_cap(tmp_path):
+    wallet = LNbitsWallet(_settings(tmp_path, MAX_SATS_PER_TASK=1000, MAX_DAILY_SATS=1500))
 
     async def _ok(_):
         return True, "hashA", None
@@ -109,8 +111,8 @@ async def test_rejects_over_daily_cap():
 
 
 @pytest.mark.asyncio
-async def test_ledger_prunes_old_entries():
-    wallet = LNbitsWallet(_settings(MAX_SATS_PER_TASK=1000, MAX_DAILY_SATS=1500))
+async def test_ledger_prunes_old_entries(tmp_path):
+    wallet = LNbitsWallet(_settings(tmp_path, MAX_SATS_PER_TASK=1000, MAX_DAILY_SATS=1500))
     # Seed an "old" spend older than 24h.
     wallet._spend_ledger.append((time.time() - 86_500, 1000))
 
@@ -127,8 +129,8 @@ async def test_ledger_prunes_old_entries():
 
 
 @pytest.mark.asyncio
-async def test_failure_does_not_record_spend():
-    wallet = LNbitsWallet(_settings(MAX_SATS_PER_TASK=1000, MAX_DAILY_SATS=5000))
+async def test_failure_does_not_record_spend(tmp_path):
+    wallet = LNbitsWallet(_settings(tmp_path, MAX_SATS_PER_TASK=1000, MAX_DAILY_SATS=5000))
 
     async def _fail(_):
         return False, None, "route not found"
@@ -140,6 +142,29 @@ async def test_failure_does_not_record_spend():
     assert result.success is False
     assert result.error == "route not found"
     assert wallet._spend_ledger == []
+
+
+@pytest.mark.asyncio
+async def test_ledger_persists_across_wallet_restart(tmp_path):
+    """The on-disk spend ledger closes the restart-bypass hole on the daily cap."""
+    w1 = LNbitsWallet(_settings(tmp_path, MAX_SATS_PER_TASK=1000, MAX_DAILY_SATS=1500))
+
+    async def _ok(_):
+        return True, "hashA", None
+
+    w1._pay_invoice_raw = _ok  # type: ignore[assignment]
+    with patch("backend.lightning._decode_invoice_amount_sats", return_value=1000):
+        r1 = await w1.pay_invoice("x")
+    assert r1.success is True
+
+    # A fresh wallet instance loads the same on-disk ledger and still enforces the cap.
+    w2 = LNbitsWallet(_settings(tmp_path, MAX_SATS_PER_TASK=1000, MAX_DAILY_SATS=1500))
+    w2._pay_invoice_raw = _ok  # type: ignore[assignment]
+    assert len(w2._spend_ledger) == 1
+    with patch("backend.lightning._decode_invoice_amount_sats", return_value=1000):
+        r2 = await w2.pay_invoice("y")
+    assert r2.success is False
+    assert "rolling-24h" in (r2.error or "")
 
 
 # ----------------------------------------------------------- LNbits surface

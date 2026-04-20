@@ -47,15 +47,29 @@ interface GraphProps {
   onSelect: (e: ManifestEntry) => void;
 }
 
+const PHYSICS_MAX_ITERATIONS = 180;
+const PHYSICS_SETTLE_THRESHOLD = 0.0005;
+
 function Graph({ entries, onSelect }: GraphProps) {
   const group = useRef<THREE.Group>(null);
   const nodes = useMemo(() => buildInitialLayout(entries), [entries]);
+  const iterRef = useRef(0);
+  const settledRef = useRef(false);
+
+  // Re-enable physics whenever the node set changes.
+  useEffect(() => {
+    iterRef.current = 0;
+    settledRef.current = false;
+  }, [entries]);
 
   useFrame(({ clock }) => {
     if (group.current) {
       group.current.rotation.y = clock.getElapsedTime() * 0.05;
     }
+    if (settledRef.current) return;
+
     // Simple repulsion step so nodes don't overlap visually.
+    let totalDisplacement = 0;
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const delta = nodes[i].position.clone().sub(nodes[j].position);
@@ -65,8 +79,17 @@ function Graph({ entries, onSelect }: GraphProps) {
           const force = delta.normalize().multiplyScalar((target - dist) * 0.01);
           nodes[i].position.add(force);
           nodes[j].position.sub(force);
+          totalDisplacement += force.length() * 2;
         }
       }
+    }
+
+    iterRef.current += 1;
+    if (
+      iterRef.current >= PHYSICS_MAX_ITERATIONS ||
+      totalDisplacement < PHYSICS_SETTLE_THRESHOLD
+    ) {
+      settledRef.current = true;
     }
   });
 

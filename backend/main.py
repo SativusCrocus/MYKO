@@ -47,17 +47,23 @@ async def _run() -> None:
             log.warning(f"Nostr tools not available: {e}")
 
         # Optional: Lightning payments (Phase 3).
+        wallet = None
         try:
             from .lightning import LightningWallet
             from .mcp_tools import register_lightning_tools
 
             wallet = LightningWallet.create(settings)
+            await wallet.__aenter__()
             register_lightning_tools(server, wallet)
             log.info("Registered Lightning tools")
         except ImportError as e:
             log.warning(f"Lightning tools not available: {e}")
 
-        await server.run()
+        try:
+            await server.run()
+        finally:
+            if wallet is not None:
+                await wallet.close()
 
 
 def main() -> None:

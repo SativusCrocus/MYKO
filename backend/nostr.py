@@ -127,11 +127,23 @@ def _chacha20_xor(key: bytes, nonce_12: bytes, data: bytes) -> bytes:
 # ------------------------------------------------------------- NIP-44 payload
 
 
-def nip44_encrypt(priv_bytes: bytes, recipient_xonly_hex: str, plaintext: str) -> str:
-    """Produce a NIP-44 v2 base64-encoded ciphertext envelope."""
+def nip44_encrypt(
+    priv_bytes: bytes,
+    recipient_xonly_hex: str,
+    plaintext: str,
+    *,
+    _nonce: bytes | None = None,
+) -> str:
+    """Produce a NIP-44 v2 base64-encoded ciphertext envelope.
+
+    ``_nonce`` overrides the random nonce and is intended only for reproducing
+    official test vectors; callers in production must let it default.
+    """
     priv = PrivateKey(priv_bytes)
     conversation_key = _derive_conversation_key(priv, recipient_xonly_hex)
-    nonce = secrets.token_bytes(32)
+    nonce = _nonce if _nonce is not None else secrets.token_bytes(32)
+    if len(nonce) != 32:
+        raise NostrError(f"NIP-44 nonce must be 32 bytes (got {len(nonce)})")
     chacha_key, chacha_nonce, hmac_key = _derive_message_keys(conversation_key, nonce)
     padded = _pad_plaintext(plaintext.encode("utf-8"))
     ciphertext = _chacha20_xor(chacha_key, chacha_nonce, padded)

@@ -16,6 +16,7 @@ Characteristics:
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
 import logging
@@ -27,6 +28,7 @@ from pathlib import Path
 from typing import Any
 
 import uvicorn
+import websockets
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -87,6 +89,7 @@ async def _lifespan(app: FastAPI):
         from .lightning import LightningWallet
 
         state.wallet = LightningWallet.create(settings)
+        await state.wallet.__aenter__()
     except Exception as e:
         log.warning(f"Lightning not available: {e}")
         state.wallet = None
@@ -97,6 +100,8 @@ async def _lifespan(app: FastAPI):
         yield
     finally:
         await state.storage.close()
+        if state.wallet is not None:
+            await state.wallet.close()
 
 
 app = FastAPI(lifespan=_lifespan, title="MYKO Bridge", version="0.1.0")
@@ -179,18 +184,62 @@ async def lightning_balance():
     return {"balance_sats": int(sats)}
 
 
+RELAY_PROBE_TIMEOUT_SECONDS = 3
+
+
+async def _probe_relay(url: str) -> bool:
+    """Return True if we can open a WebSocket to ``url`` within the probe timeout."""
+    try:
+        async with asyncio.timeout(RELAY_PROBE_TIMEOUT_SECONDS):
+            async with websockets.connect(url, open_timeout=RELAY_PROBE_TIMEOUT_SECONDS):
+                return True
+    except (OSError, asyncio.TimeoutError, websockets.WebSocketException, Exception):
+        return False
+
+
 @app.get("/identity/info", dependencies=[Depends(require_token)])
 async def identity_info():
     if state.nostr is None:
         raise HTTPException(status_code=503, detail="Nostr not configured")
     pubkey_hex = await state.nostr.get_pubkey()
     npub = _xonly_hex_to_npub(pubkey_hex)
+    relays = state.settings.NOSTR_RELAYS
+    statuses = await asyncio.gather(*(_probe_relay(u) for u in relays), return_exceptions=False)
     return {
         "pubkey_hex": pubkey_hex,
         "npub": npub,
-        "relays": [{"url": url, "connected": False} for url in state.settings.NOSTR_RELAYS],
+        "relays": [{"url": u, "connected": bool(s)} for u, s in zip(relays, statuses)],
         "last_broadcast": None,
     }
+
+
+def _tail_lines(path: Path, n: int, chunk_size: int = 8192) -> list[str]:
+    """Return the last ``n`` lines of a file without loading it fully into memory.
+
+    Seeks to EOF and reads backward in ``chunk_size`` blocks until ``n`` newlines
+    are found (or the start of the file is reached). Trailing empty lines are
+    preserved by ``splitlines()`` behavior of the final decode.
+    """
+    with path.open("rb") as f:
+        f.seek(0, os.SEEK_END)
+        size = f.tell()
+        if size == 0:
+            return []
+        pos = size
+        newline_count = 0
+        chunks: list[bytes] = []
+        while pos > 0 and newline_count <= n:
+            read = min(chunk_size, pos)
+            pos -= read
+            f.seek(pos)
+            buf = f.read(read)
+            chunks.append(buf)
+            newline_count += buf.count(b"\n")
+        data = b"".join(reversed(chunks))
+    # Decode leniently; audit logs are UTF-8 but we don't want a single bad byte
+    # to break the whole tail view.
+    lines = data.decode("utf-8", errors="replace").splitlines()
+    return lines[-n:]
 
 
 @app.get("/audit/recent", dependencies=[Depends(require_token)])
@@ -198,7 +247,7 @@ async def audit_recent(limit: int = Query(default=50, ge=1, le=500)):
     path = state.settings.MYKO_HOME / "logs" / "audit.jsonl"
     if not path.exists():
         return {"entries": []}
-    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]
+    lines = _tail_lines(path, limit)
     entries: list[dict] = []
     for line in lines:
         try:
