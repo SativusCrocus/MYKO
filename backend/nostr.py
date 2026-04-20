@@ -93,25 +93,48 @@ def _derive_message_keys(conversation_key: bytes, nonce: bytes) -> tuple[bytes, 
     return material[:32], material[32:44], material[44:76]
 
 
+def _calc_padded_len(unpadded_len: int) -> int:
+    """NIP-44 v2 ``calc_padded_len``: chunk-based padding, not naive power-of-two.
+
+    For len <= 32, pad to 32. Otherwise, round up to the next multiple of
+    ``chunk``, where ``chunk`` is 32 for the 33..256 range and
+    ``next_power_of_two(len) // 8`` thereafter.
+    """
+    if unpadded_len <= 32:
+        return 32
+    next_power = 1 << (unpadded_len - 1).bit_length()
+    chunk = 32 if next_power <= 256 else next_power // 8
+    return chunk * ((unpadded_len - 1) // chunk + 1)
+
+
 def _pad_plaintext(plaintext: bytes) -> bytes:
-    """NIP-44 v2 padding: 2-byte big-endian length prefix + zero padding to power-of-two buckets (min 32)."""
+    """2-byte big-endian length prefix + zero padding to NIP-44 v2 bucket size."""
     n = len(plaintext)
     if n < 1 or n > 65535:
         raise NostrError(f"plaintext length {n} outside NIP-44 bounds (1..65535)")
-    # Bucket: smallest 2^k >= n, minimum 32.
-    bucket = 32
-    while bucket < n:
-        bucket *= 2
-    pad_len = bucket - n
+    pad_len = _calc_padded_len(n) - n
     return n.to_bytes(2, "big") + plaintext + b"\x00" * pad_len
 
 
 def _unpad_plaintext(padded: bytes) -> bytes:
+    """Extract plaintext from a padded buffer, strictly validating NIP-44 v2 shape.
+
+    Rejects: short headers, declared lengths that don't fit, buckets that
+    don't match ``calc_padded_len``, and non-zero padding bytes.
+    """
     if len(padded) < 2:
         raise NostrError("padded plaintext too short")
     n = int.from_bytes(padded[:2], "big")
-    if n < 1 or 2 + n > len(padded):
+    if n < 1 or n > 65535:
         raise NostrError("invalid padded length header")
+    if 2 + n > len(padded):
+        raise NostrError("declared length exceeds padded buffer")
+    # Full padded length must equal 2 + calc_padded_len(n) — anything else is
+    # malformed or a padding-oracle probe.
+    if len(padded) != 2 + _calc_padded_len(n):
+        raise NostrError("padded length does not match NIP-44 bucket size")
+    if padded[2 + n :] != b"\x00" * (len(padded) - 2 - n):
+        raise NostrError("non-zero padding bytes")
     return padded[2 : 2 + n]
 
 

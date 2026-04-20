@@ -22,6 +22,7 @@ from coincurve import PrivateKey, PublicKeyXOnly
 
 from backend.nostr import (
     NostrError,
+    _calc_padded_len,
     _derive_conversation_key,
     _derive_message_keys,
     _pad_plaintext,
@@ -88,12 +89,9 @@ def test_message_keys_match_vector():
     ids=lambda v: str(v),
 )
 def test_padded_length_matches_vector(unpadded, padded):
-    # Skip the unpadded == 0 edge — our implementation (correctly) rejects empty plaintext.
-    if unpadded == 0:
-        pytest.skip("zero-length plaintext not supported by NIP-44 v2")
-    buf = _pad_plaintext(b"x" * unpadded)
-    # _pad_plaintext returns 2-byte length prefix + padded body.
-    assert len(buf) - 2 == padded
+    # ``_calc_padded_len`` is pure math — it must agree with the spec even
+    # above the 65535 byte limit enforced by ``_pad_plaintext``.
+    assert _calc_padded_len(unpadded) == padded
 
 
 # --------------------------------------------------- encrypt_decrypt
