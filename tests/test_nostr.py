@@ -155,10 +155,12 @@ def test_nip44_tamper_detection():
         nip44_decrypt(bob.secret, alice_xonly, tampered)
 
 
-def test_nip44_padding_buckets_to_power_of_two():
-    for n, expected_bucket in [(1, 32), (32, 32), (33, 64), (100, 128), (129, 256)]:
+def test_nip44_padding_buckets_match_spec():
+    # NIP-44 v2 uses chunk-based padding, not naive power-of-two. Spot-check
+    # a few points from the paulmillr calc_padded_len vectors.
+    for n, expected_bucket in [(1, 32), (32, 32), (33, 64), (100, 128), (129, 160), (200, 224)]:
         padded = _pad_plaintext(b"x" * n)
-        assert len(padded) == 2 + expected_bucket
+        assert len(padded) == 2 + expected_bucket, f"n={n}: got {len(padded) - 2}, want {expected_bucket}"
 
 
 def test_nip44_unpad_recovers_original_length():
