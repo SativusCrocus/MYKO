@@ -6,7 +6,7 @@ aiohttp==3.10.10
 
 # === Nostr identity (Phase 2) ===
 coincurve==21.0.0
-websockets==13.1
+websockets==16.0
 
 # === Lightning payments (Phase 3) ===
 bolt11==2.1.0
