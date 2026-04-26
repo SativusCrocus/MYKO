@@ -1,0 +1,56 @@
+name: Feature request
+description: Suggest a capability MYKO should grow.
+title: "[feature] "
+labels: [enhancement, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the proposal. MYKO has an opinionated brand — *the user owns
+        every key, the AI executes never controls* — and not every feature
+        fits. The clearer you can make the user-visible problem, the better.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can't a MYKO user do today, and why does it matter?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you solve it? Sketches, API shapes, and prior art are all welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else did you think about? Why didn't it fit?
+
+  - type: textarea
+    id: brand-fit
+    attributes:
+      label: Brand & threat-model fit
+      description: |
+        Does this require sending data off-machine? Does it weaken any of
+        the manifesto guarantees? Be honest — that's how we triage faster.
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Which sovereign layer
+      options:
+        - Brain + Memory (vault, MCP, IPFS)
+        - Identity (Nostr)
+        - Value (Lightning)
+        - Interface (Tauri / React / dashboard)
+        - Build / CI / packaging
+        - Documentation
+        - Other
+    validations:
+      required: true
