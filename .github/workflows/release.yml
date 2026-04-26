@@ -1,0 +1,118 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  # Manual backfill, e.g. for v0.1.0 which was tagged before this workflow existed.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build artifacts for (e.g. v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  artifacts:
+    name: Build, attest, and publish release artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ref="${{ inputs.tag }}"
+          else
+            ref="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "Resolved tag: $ref"
+
+      - name: Checkout tag
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ steps.tag.outputs.ref }}
+          fetch-depth: 0
+
+      - name: Build deterministic source archive
+        id: archive
+        run: |
+          ref="${{ steps.tag.outputs.ref }}"
+          name="myko-${ref}.tar.gz"
+          # SOURCE_DATE_EPOCH derived from the tag commit so the archive is reproducible.
+          export SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD)
+          git archive --format=tar.gz --prefix="myko-${ref}/" -o "$name" HEAD
+          sha256sum "$name" > "$name.sha256"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "$name" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: Generate SBOM (CycloneDX)
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.20.5
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: myko-sbom.cdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Generate SBOM (SPDX)
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.20.5
+        with:
+          path: .
+          format: spdx-json
+          output-file: myko-sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: |
+            myko-${{ steps.tag.outputs.ref }}.tar.gz
+            myko-sbom.cdx.json
+            myko-sbom.spdx.json
+
+      - name: Upload artifacts to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ref="${{ steps.tag.outputs.ref }}"
+          # Create the release if it doesn't exist (workflow_dispatch backfill case).
+          if ! gh release view "$ref" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$ref" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "MYKO $ref" \
+              --notes "Artifacts published by the release workflow."
+          fi
+          gh release upload "$ref" \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber \
+            "myko-${ref}.tar.gz" \
+            "myko-${ref}.tar.gz.sha256" \
+            "myko-sbom.cdx.json" \
+            "myko-sbom.spdx.json"
+
+      - name: Summarize
+        run: |
+          ref="${{ steps.tag.outputs.ref }}"
+          {
+            echo "## Release artifacts for \`$ref\`"
+            echo
+            echo "| Artifact | SHA-256 |"
+            echo "|---|---|"
+            echo "| \`myko-${ref}.tar.gz\` | \`${{ steps.archive.outputs.sha256 }}\` |"
+            echo "| \`myko-sbom.cdx.json\` | \`$(sha256sum myko-sbom.cdx.json | awk '{print $1}')\` |"
+            echo "| \`myko-sbom.spdx.json\` | \`$(sha256sum myko-sbom.spdx.json | awk '{print $1}')\` |"
+            echo
+            echo "Build provenance attested via Sigstore. Verify with:"
+            echo
+            echo '```'
+            echo "gh attestation verify myko-${ref}.tar.gz --repo $GITHUB_REPOSITORY"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
